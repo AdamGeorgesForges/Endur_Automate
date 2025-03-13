@@ -1,0 +1,1 @@
+`pandas`, `sqlalchemy`, and `matplotlib` with their respective versions.

@@ -1,0 +1,77 @@
+import sqlite3
+
+def create_database():
+    #Connect to SQLite database (or create one if it doesn't exist already)
+    conn = sqlite3.connect('dummy_database.db')
+    cursor = conn.cursor()
+
+    #Create a new SQL table
+    cursor.execute('''
+    CREATE TABLE IF NOT EXISTS Trades(
+        TradeID integer PRIMARY KEY,
+        TradeDate text NOT NULL,
+        Commodity text NOT NULL,
+        Quantity integer,
+        Price real
+    )
+    ''')
+
+    #Commit changes
+    conn.commit()
+    return conn
+
+#This function inserts data into the table. It accepts a connection object so it can use the same database connection established in the create_database() function.
+def insert_data(conn):
+    cursor = conn.cursor()
+
+    #UN-comment line 29, and 44 then comment out lines 38-42 if you want to refresh the data each time you run the script
+    #Clear existing data
+    #cursor.execute('DELETE FROM Trades')
+
+    #Insert data
+    trades = [
+        (1, '2025-01-01', 'Oil', 100, 70.5),
+        (2, '2025-01-02', 'Gas', 150, 5.75),
+        (3, '2025-01-03','Electricity', 200, 45.99)
+    ]
+
+    for trade in trades:
+        cursor.execute('SELECT TradeID from Trades WHERE TradeID = ?', (trade[0],))
+        result = cursor.fetchone()
+        if not result:
+            cursor.execute('INSERT INTO Trades VALUES (?,?,?,?,?)', trade)
+            
+    #cursor.executemany('INSERT INTO Trades VALUES (?,?,?,?,?)', trades)
+
+    #Commit changes
+    conn.commit()
+
+# This function retrieves and prints all data from the table. Again, it uses the same connection.
+def query_data(conn):
+    cursor = conn.cursor()
+
+    #Query the database
+    cursor.execute('SELECT * FROM Trades')
+    rows = cursor.fetchall()
+
+    for row in rows:
+        print(row)
+
+#This function orchestrates the creation, data insertion, and querying by calling the other functions in order. It ensures that all database activities are performed sequentially on the same database connection before it's closed.
+def main():
+    conn = None
+    try:
+
+        conn = create_database()
+        insert_data(conn)
+        query_data(conn)
+    except sqlite3.Error as ie:
+        print(f"A database integrity error occured: {ie}")
+    except sqlite3.Error as e:
+        print(f"An error has occured: {e}")
+    finally:
+        if conn:
+            conn.close()
+
+if __name__ == "__main__":
+    main()
